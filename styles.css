@@ -1,0 +1,543 @@
+/* Custom styles to match the design */
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #eef2f5;
+}
+
+.header-box {
+    background-color: #4a5568;
+    color: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    text-align: center;
+}
+
+.header-box-purple {
+    background-color: #6b46c1;
+}
+
+.header-box-pink {
+     background-color: #d53f8c;
+}
+
+.main-header {
+    background-color: #2d3748;
+    color: white;
+    padding: 1rem;
+}
+
+/* --- Font and padding for better fit --- */
+th, td {
+    padding: 0.4rem 0.5rem;
+    font-size: 0.75rem;
+    text-align: left;
+    border: 1px solid #e2e8f0;
+    white-space: nowrap;
+    vertical-align: middle; /* Better alignment with rowspan */
+}
+
+thead th {
+    font-weight: 600;
+    color: #4a5568;
+    text-align: center;
+}
+
+tbody tr:hover {
+    background-color: #f7fafc;
+}
+
+.file-upload-btn {
+    background-color: #4299e1;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background-color: 0.3s;
+    font-weight: 600;
+}
+
+.file-upload-btn:hover {
+    background-color: #3182ce;
+}
+
+/* --- Tab Styles --- */
+.tab-btn {
+    border-bottom: 2px solid transparent;
+    padding: 1rem 0;
+    font-weight: 600;
+    color: #6b7280;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    color: #1f2937;
+}
+
+.tab-btn.active {
+    color: #4f46e5;
+    border-bottom-color: #4f46e5;
+}
+
+.tab-content {
+    display: block;
+}
+
+/* --- Header Color Styles --- */
+thead .header-product-info { background-color: #059669; color: white; }
+thead .header-qty-history { background-color: #7c3aed; color: white; }
+thead .header-calc-stock { background-color: #2563eb; color: white; }
+thead .header-mrp-info { background-color: #dc2626; color: white; }
+thead .header-key-factor { background-color: #f59e0b; color: #1f2937; }
+
+/* --- Scrolling and Layout --- */
+.table-container {
+    max-height: 65vh;
+    overflow: auto;
+}
+
+/* --- Logo, Footer, and Clock --- */
+.logo { height: 50px; width: auto; }
+.design-by-text { font-style: italic; font-size: 0.8rem; color: #d1d5db; }
+#datetime-clock { min-width: 280px; text-align: right; }
+
+/* --- Loading Animation --- */
+#loading-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); display: none;
+    justify-content: center; align-items: center; z-index: 1000;
+}
+.loading-container { text-align: center; }
+.loading-text { color: white; font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; }
+.loading-bar-container { width: 300px; height: 20px; background-color: #555; border-radius: 10px; overflow: hidden; }
+.loading-bar {
+    width: 100%; height: 100%; background: linear-gradient(90deg, #4facfe, #00f2fe);
+    transform-origin: left; animation: loading-animation 2s infinite linear;
+}
+@keyframes loading-animation { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+/* --- Generic Filter Styles --- */
+.filter-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: center;
+}
+
+.filter-btn {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    border: 1px solid #cbd5e0;
+    border-radius: 0.5rem;
+    background-color: white;
+    cursor: pointer;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.filter-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background-color: white;
+    border: 1px solid #cbd5e0;
+    border-radius: 0.5rem;
+    margin-top: 0.25rem;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    z-index: 20;
+    padding: 0.5rem;
+}
+
+.filter-search-input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #cbd5e0;
+    border-radius: 0.375rem;
+    margin-bottom: 0.5rem;
+}
+
+.filter-list {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.filter-list label {
+    display: block;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 0.25rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.filter-list label:hover {
+    background-color: #f1f5f9;
+}
+
+.filter-list input {
+    margin-right: 0.5rem;
+}
+
+.selected-filters-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.filter-tag {
+    display: flex;
+    align-items: center;
+    background-color: #e0e7ff;
+    color: #4338ca;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.filter-tag.vendor {
+    background-color: #d1fae5;
+    color: #065f46;
+}
+
+.filter-tag button {
+    margin-left: 0.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: inherit;
+}
+
+/* --- Upload Status and Highlighting Styles --- */
+.upload-status-icon {
+    display: inline-block;
+    margin-left: 8px;
+    color: #9ca3af; /* Grey */
+    transition: all 0.3s ease;
+}
+
+.upload-status-icon.success {
+    color: #34d399; /* Green */
+    text-shadow: 0 0 8px #34d399;
+}
+
+.highlight-red {
+    background-color: #fee2e2 !important; /* Light Red */
+    color: #b91c1c !important; /* Dark Red */
+    font-weight: bold;
+}
+
+/* --- Sorting Styles --- */
+.sortable {
+    cursor: pointer;
+    position: relative;
+    padding-right: 20px;
+}
+
+.sort-icon {
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+}
+
+.sortable:hover .sort-icon {
+    opacity: 1;
+}
+
+.sort-icon.active {
+    opacity: 1;
+    color: #2563eb;
+}
+
+/* --- FINAL STICKY HEADER AND COLUMN STYLES --- */
+thead .sticky-row-1, thead .sticky-row-2 {
+    position: sticky;
+    z-index: 10;
+}
+
+thead .sticky-row-1 {
+    top: 0;
+}
+
+thead .sticky-row-2 {
+    top: 33px; /* Adjust this based on the height of the first row */
+}
+
+tbody .sticky-col-1, thead .sticky-col-1 {
+    position: sticky;
+    left: 0;
+    min-width: 120px;
+}
+
+tbody .sticky-col-2, thead .sticky-col-2 {
+    position: sticky;
+    left: 120px; /* Must match the width of the first column */
+    min-width: 150px;
+}
+
+/* Corner cells need the highest z-index to sit on top of everything */
+thead .sticky-col-1, thead .sticky-col-2 {
+    z-index: 15;
+}
+
+tbody .sticky-col-1, tbody .sticky-col-2 {
+    background-color: white;
+    z-index: 5;
+}
+
+tbody tr:hover .sticky-col-1, tbody tr:hover .sticky-col-2 {
+    background-color: #f7fafc;
+}
+
+/* --- Clear Filters Button Style --- */
+.clear-filters-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    background-color: white;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.clear-filters-btn:hover {
+    background-color: #ef4444;
+    color: white;
+}
+
+/* --- New MRP Filter Button Style --- */
+.mrp-filter-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+    border: 1px solid transparent;
+    color: white;
+    background-color: #dc2626; /* Red */
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 600;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+}
+
+.mrp-filter-btn:hover {
+    background-color: #b91c1c; /* Darker Red */
+}
+
+.mrp-filter-btn.active {
+    background-color: #991b1b; /* Even Darker Red */
+    box-shadow: inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+    border-color: #f87171;
+}
+
+/* --- Graph and Selection Styles --- */
+.details-section {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    align-items: start;
+}
+
+.graph-container {
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    height: 450px;
+}
+
+.details-table-container {
+    grid-column: 1 / -1; /* Span across all columns */
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+}
+
+.selected-row {
+    background-color: #fef9c3 !important; /* Light Yellow */
+}
+
+.details-table-container th {
+    background-color: #f3f4f6;
+}
+
+/* --- New Print Button Style --- */
+.print-btn {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    background-color: #6d28d9; /* Violet */
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.print-btn:hover {
+    background-color: #5b21b6;
+}
+
+/* --- MRP Report Tab Styles --- */
+.mrp-search-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 1rem;
+}
+
+.mrp-left-panel {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 1rem;
+}
+
+.mrp-filter-container {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.mrp-filter-btn {
+    flex-grow: 1;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    border: 1px solid #cbd5e0;
+    background-color: #f1f5f9;
+    color: #475569;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.mrp-filter-btn:hover {
+    background-color: #e2e8f0;
+}
+
+.mrp-filter-btn.active {
+    color: white;
+    border-color: transparent;
+}
+
+#mrp-filter-all.active { background-color: #3b82f6; } /* Blue */
+#mrp-filter-check.active { background-color: #22c55e; } /* Green */
+#mrp-filter-x.active { background-color: #ef4444; } /* Red */
+
+.table-container-mrp {
+    max-height: 60vh;
+    overflow-y: auto;
+}
+.table-container-mrp-horizontal {
+    overflow-x: auto;
+}
+#mrp-left-table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+#mrp-left-table th {
+    background-color: #60a5fa; /* Blue */
+    color: white;
+    cursor: pointer;
+    padding: 0.5rem;
+    border: 1px solid #3b82f6;
+}
+#mrp-left-table td {
+    text-align: center;
+    font-weight: 600;
+    padding: 0.5rem;
+    border: 1px solid #e2e8f0;
+}
+#mrp-left-table th.selected {
+    background-color: #fef9c3; /* Light yellow */
+    color: #4a5568;
+}
+
+#mrp-right-table th {
+    background-color: #fef08a; /* Yellow */
+    color: #3f3f46; /* Dark Gray text */
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+/* --- MRP Report Highlighting --- */
+.status-red, .status-green {
+    font-weight: 600;
+}
+
+.status-red {
+    background-color: #fee2e2; /* Light Red */
+    color: #b91c1c; /* Dark Red */
+}
+
+.status-green {
+    background-color: #dcfce7; /* Light Green */
+    color: #166534; /* Dark Green */
+}
+
+.clickable-product {
+    cursor: pointer;
+    text-decoration: underline;
+    font-weight: bold;
+    color: #2563eb; /* Blue to indicate it's clickable */
+}
+
+.clickable-product:hover {
+    color: #1d4ed8;
+}
+
+.highlight-product-name {
+    background-color: #e0e7ff !important; /* A light indigo */
+    font-weight: bold;
+}
+
+/* --- Status Bar for MRP Report --- */
+.status-bar-container {
+    width: 60px;
+    height: 18px;
+    border: 1px solid #a1a1aa;
+    border-radius: 4px;
+    display: flex;
+    position: relative;
+    background-color: #f4f4f5;
+    overflow: hidden;
+}
+
+.status-bar-green, .status-bar-red {
+    height: 100%;
+}
+
+.status-bar-green { background-color: #22c55e; }
+.status-bar-red { background-color: #ef4444; }
+
+.status-bar-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10px;
+    font-weight: bold;
+    color: white;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+    pointer-events: none;
+}
