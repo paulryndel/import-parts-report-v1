@@ -273,6 +273,16 @@ function parseNumericValue(value) {
 }
 
 
+function normalizeProductCode(code) {
+    if (typeof code !== 'string') return code;
+    const trimmedCode = code.trim();
+    if (trimmedCode.toUpperCase().startsWith('MI')) {
+        return 'ML' + trimmedCode.substring(2);
+    }
+    return trimmedCode;
+}
+
+
 function processProcurementData(data) {
     const products = {};
     data.forEach(row => {
@@ -284,10 +294,7 @@ function processProcurementData(data) {
 
         if (!originalCode || !(date instanceof Date) || isNaN(date.getTime())) return;
         
-        let normalizedCode = originalCode;
-        if (normalizedCode.toUpperCase().startsWith('MI')) {
-            normalizedCode = 'ML' + normalizedCode.substring(2);
-        }
+        const normalizedCode = normalizeProductCode(originalCode);
 
         const year = date.getFullYear();
         const quantity = parseNumericValue(trimmedRow['Quantity']);
@@ -367,10 +374,7 @@ function processMrpData(data) {
         const originalCode = String(row['Products'] || '').trim();
         if (!originalCode) return;
 
-        let normalizedCode = originalCode;
-        if (normalizedCode.toUpperCase().startsWith('MI')) {
-            normalizedCode = 'ML' + normalizedCode.substring(2);
-        }
+        const normalizedCode = normalizeProductCode(originalCode);
 
         // This new logic simply overwrites the data for a product code with each new row found.
         // By the end of the loop, only the data from the LAST row for that product will remain.
@@ -1157,18 +1161,19 @@ function renderMrpDetailsTable(data) {
                             const fullProductName = product.ProductName || '';
                             const truncatedProductName = fullProductName.length > 20 ? fullProductName.substring(0, 20) + '...' : fullProductName;
 
-                            const productCode = product.Products || '';
-                            const hasHistory = allProducts.hasOwnProperty(productCode);
+                            const originalProductCode = product.Products || '';
+                            const normalizedProductCode = normalizeProductCode(originalProductCode);
+                            const hasHistory = allProducts.hasOwnProperty(normalizedProductCode);
                             const clickableClass = hasHistory ? 'clickable-product' : '';
-                            const dataAttribute = hasHistory ? `data-product-code="${productCode}"` : '';
+                            const dataAttribute = hasHistory ? `data-product-code="${normalizedProductCode}"` : '';
 
                             rowHtml += `
-                                <td class="${clickableClass} ${highlightClass}" ${dataAttribute}>${productCode}</td>
+                                <td class="${clickableClass} ${highlightClass}" ${dataAttribute}>${originalProductCode}</td>
                                 <td title="${fullProductName}">${truncatedProductName}</td>
                                 <td class="text-center">${product.Qty || 0}</td>
                                 <td class="text-center">${product.Units || ''}</td>
                                 <td class="text-center">${product.WeekBalance || 0}</td>
-                                <td class="text-center">${mrpData[productCode] ? mrpData[productCode].mrpBalance : 0}</td>
+                                <td class="text-center">${mrpData[normalizedProductCode] ? mrpData[normalizedProductCode].mrpBalance : 0}</td>
                             `;
                             
                             if (isFirstCustomerRow) {
@@ -1196,7 +1201,7 @@ function renderMrpDetailsTable(data) {
 
 function handleMrpProductClick(event) {
     const cell = event.target;
-    const productCode = cell.dataset.productCode;
+    const productCode = normalizeProductCode(cell.dataset.productCode || '');
 
     // This check is now mostly redundant due to the rendering change, but good for safety
     if (!productCode || !allProducts[productCode]) {
@@ -1213,7 +1218,7 @@ function handleMrpProductClick(event) {
 
     // Update highlighting for all visible rows
     document.querySelectorAll('#mrp-right-table .clickable-product').forEach(c => {
-        const code = c.dataset.productCode;
+        const code = normalizeProductCode(c.dataset.productCode || '');
         const row = c.closest('tr');
         const productNameCell = row.cells[4];
         if (productNameCell) {
@@ -1230,7 +1235,11 @@ function renderMrpProductDetails(productCodes) {
     const qtyCtx = document.getElementById('mrp-history-chart').getContext('2d');
     const priceCtx = document.getElementById('mrp-price-history-chart').getContext('2d');
 
-    if (productCodes.length === 0) {
+    const normalizedCodes = productCodes
+        .map(code => normalizeProductCode(code || ''))
+        .filter(code => code && allProducts[code]);
+
+    if (normalizedCodes.length === 0) {
         detailsSection.classList.add('hidden');
         return;
     }
@@ -1242,14 +1251,14 @@ function renderMrpProductDetails(productCodes) {
     const years = ['2021', '2022', '2023', '2024', '2025'];
     
     // Create datasets for all selected products
-    const qtyDatasets = productCodes.map(code => {
+    const qtyDatasets = normalizedCodes.map(code => {
         const product = allProducts[code];
         const data = years.map(year => product.years[year] ? product.years[year].qty : 0);
         const color = `rgba(${Math.floor(Math.random() * 155) + 50}, ${Math.floor(Math.random() * 155) + 50}, ${Math.floor(Math.random() * 155) + 50}, 1)`;
         return { label: code, data: data, borderColor: color, backgroundColor: color.replace('1)', '0.2)'), fill: true, tension: 0.1, pointRadius: 5 };
     });
 
-    const priceDatasets = productCodes.map(code => {
+    const priceDatasets = normalizedCodes.map(code => {
         const product = allProducts[code];
         const data = years.map(year => {
             const yearData = product.years[year];
@@ -1276,7 +1285,7 @@ function renderMrpProductDetails(productCodes) {
     // --- Details Table ---
     const tableBody = document.getElementById('mrp-details-table-body');
     tableBody.innerHTML = ''; 
-    productCodes.forEach((code, index) => {
+    normalizedCodes.forEach((code, index) => {
         const product = allProducts[code];
         const productMrp = mrpData[code] || { mrpBalance: 0 };
         const storeStock = getStoreStock(code);
