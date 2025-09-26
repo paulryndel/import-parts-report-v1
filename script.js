@@ -63,6 +63,9 @@ let mrpSelectedModels = [];
 let mrpSelectedSources = []; // For MRP tab
 let mrpFilterNegativeBalance = false;
 let mrpSelectedWeek = null;
+let supplierSummary = [];
+let supplierAmountChart = null;
+let supplierQuantityChart = null;
 
 
 // --- Event Listeners ---
@@ -129,9 +132,10 @@ function handleProcurementFile(event) {
             }
             
             rawData = [...data21_24, ...data25];
-            
+
             populateFilters();
             applyFiltersAndRender();
+            renderSupplierInfo();
             statusIcon.classList.add('success');
             loadingOverlay.style.display = 'none';
         }, 50);
@@ -273,6 +277,36 @@ function parseNumericValue(value) {
 }
 
 
+function normalizeRowKeys(row) {
+    const normalized = {};
+    if (!row || typeof row !== 'object') return normalized;
+    Object.keys(row).forEach((key) => {
+        if (typeof key !== 'string') return;
+        normalized[key.trim().toLowerCase()] = row[key];
+    });
+    return normalized;
+}
+
+
+function formatNumber(value, decimals = 0) {
+    const number = Number.isFinite(value) ? value : 0;
+    return number.toLocaleString('en-US', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals
+    });
+}
+
+
+function normalizeProductCode(code) {
+    if (typeof code !== 'string') return code;
+    const trimmedCode = code.trim();
+    if (trimmedCode.toUpperCase().startsWith('MI')) {
+        return 'ML' + trimmedCode.substring(2);
+    }
+    return trimmedCode;
+}
+
+
 function processProcurementData(data) {
     const products = {};
     data.forEach(row => {
@@ -284,10 +318,7 @@ function processProcurementData(data) {
 
         if (!originalCode || !(date instanceof Date) || isNaN(date.getTime())) return;
         
-        let normalizedCode = originalCode;
-        if (normalizedCode.toUpperCase().startsWith('MI')) {
-            normalizedCode = 'ML' + normalizedCode.substring(2);
-        }
+        const normalizedCode = normalizeProductCode(originalCode);
 
         const year = date.getFullYear();
         const quantity = parseNumericValue(trimmedRow['Quantity']);
@@ -367,10 +398,7 @@ function processMrpData(data) {
         const originalCode = String(row['Products'] || '').trim();
         if (!originalCode) return;
 
-        let normalizedCode = originalCode;
-        if (normalizedCode.toUpperCase().startsWith('MI')) {
-            normalizedCode = 'ML' + normalizedCode.substring(2);
-        }
+        const normalizedCode = normalizeProductCode(originalCode);
 
         // This new logic simply overwrites the data for a product code with each new row found.
         // By the end of the loop, only the data from the LAST row for that product will remain.
@@ -1157,18 +1185,19 @@ function renderMrpDetailsTable(data) {
                             const fullProductName = product.ProductName || '';
                             const truncatedProductName = fullProductName.length > 20 ? fullProductName.substring(0, 20) + '...' : fullProductName;
 
-                            const productCode = product.Products || '';
-                            const hasHistory = allProducts.hasOwnProperty(productCode);
+                            const originalProductCode = product.Products || '';
+                            const normalizedProductCode = normalizeProductCode(originalProductCode);
+                            const hasHistory = allProducts.hasOwnProperty(normalizedProductCode);
                             const clickableClass = hasHistory ? 'clickable-product' : '';
-                            const dataAttribute = hasHistory ? `data-product-code="${productCode}"` : '';
+                            const dataAttribute = hasHistory ? `data-product-code="${normalizedProductCode}"` : '';
 
                             rowHtml += `
-                                <td class="${clickableClass} ${highlightClass}" ${dataAttribute}>${productCode}</td>
+                                <td class="${clickableClass} ${highlightClass}" ${dataAttribute}>${originalProductCode}</td>
                                 <td title="${fullProductName}">${truncatedProductName}</td>
                                 <td class="text-center">${product.Qty || 0}</td>
                                 <td class="text-center">${product.Units || ''}</td>
                                 <td class="text-center">${product.WeekBalance || 0}</td>
-                                <td class="text-center">${mrpData[productCode] ? mrpData[productCode].mrpBalance : 0}</td>
+                                <td class="text-center">${mrpData[normalizedProductCode] ? mrpData[normalizedProductCode].mrpBalance : 0}</td>
                             `;
                             
                             if (isFirstCustomerRow) {
@@ -1196,7 +1225,7 @@ function renderMrpDetailsTable(data) {
 
 function handleMrpProductClick(event) {
     const cell = event.target;
-    const productCode = cell.dataset.productCode;
+    const productCode = normalizeProductCode(cell.dataset.productCode || '');
 
     // This check is now mostly redundant due to the rendering change, but good for safety
     if (!productCode || !allProducts[productCode]) {
@@ -1213,7 +1242,7 @@ function handleMrpProductClick(event) {
 
     // Update highlighting for all visible rows
     document.querySelectorAll('#mrp-right-table .clickable-product').forEach(c => {
-        const code = c.dataset.productCode;
+        const code = normalizeProductCode(c.dataset.productCode || '');
         const row = c.closest('tr');
         const productNameCell = row.cells[4];
         if (productNameCell) {
@@ -1230,7 +1259,11 @@ function renderMrpProductDetails(productCodes) {
     const qtyCtx = document.getElementById('mrp-history-chart').getContext('2d');
     const priceCtx = document.getElementById('mrp-price-history-chart').getContext('2d');
 
-    if (productCodes.length === 0) {
+    const normalizedCodes = productCodes
+        .map(code => normalizeProductCode(code || ''))
+        .filter(code => code && allProducts[code]);
+
+    if (normalizedCodes.length === 0) {
         detailsSection.classList.add('hidden');
         return;
     }
@@ -1242,14 +1275,14 @@ function renderMrpProductDetails(productCodes) {
     const years = ['2021', '2022', '2023', '2024', '2025'];
     
     // Create datasets for all selected products
-    const qtyDatasets = productCodes.map(code => {
+    const qtyDatasets = normalizedCodes.map(code => {
         const product = allProducts[code];
         const data = years.map(year => product.years[year] ? product.years[year].qty : 0);
         const color = `rgba(${Math.floor(Math.random() * 155) + 50}, ${Math.floor(Math.random() * 155) + 50}, ${Math.floor(Math.random() * 155) + 50}, 1)`;
         return { label: code, data: data, borderColor: color, backgroundColor: color.replace('1)', '0.2)'), fill: true, tension: 0.1, pointRadius: 5 };
     });
 
-    const priceDatasets = productCodes.map(code => {
+    const priceDatasets = normalizedCodes.map(code => {
         const product = allProducts[code];
         const data = years.map(year => {
             const yearData = product.years[year];
@@ -1276,7 +1309,7 @@ function renderMrpProductDetails(productCodes) {
     // --- Details Table ---
     const tableBody = document.getElementById('mrp-details-table-body');
     tableBody.innerHTML = ''; 
-    productCodes.forEach((code, index) => {
+    normalizedCodes.forEach((code, index) => {
         const product = allProducts[code];
         const productMrp = mrpData[code] || { mrpBalance: 0 };
         const storeStock = getStoreStock(code);
@@ -1457,6 +1490,242 @@ function renderMrpRightPanel() {
     }
 
     renderMrpDetailsTable(filteredData);
+}
+
+// --- Supplier Information Functions ---
+function renderSupplierInfo() {
+    const tableBody = document.getElementById('supplier-table-body');
+    const tableWrapper = document.getElementById('supplier-table-wrapper');
+    const emptyState = document.getElementById('supplier-empty-state');
+    const totalQuantityCell = document.getElementById('supplier-total-quantity');
+    const totalAmountCell = document.getElementById('supplier-total-amount');
+    const overallAverageCell = document.getElementById('supplier-overall-average');
+    const amountChartCard = document.getElementById('supplier-amount-chart-card');
+    const quantityChartCard = document.getElementById('supplier-quantity-chart-card');
+
+    if (!tableBody || !tableWrapper || !emptyState || !totalQuantityCell || !totalAmountCell || !overallAverageCell || !amountChartCard || !quantityChartCard) {
+        return;
+    }
+
+    if (!rawData || rawData.length === 0) {
+        supplierSummary = [];
+        tableBody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        tableWrapper.classList.add('hidden');
+        amountChartCard.classList.add('hidden');
+        quantityChartCard.classList.add('hidden');
+        totalQuantityCell.textContent = '0';
+        totalAmountCell.textContent = '0';
+        overallAverageCell.textContent = '0';
+        destroySupplierCharts();
+        return;
+    }
+
+    supplierSummary = buildSupplierSummary(rawData);
+
+    if (supplierSummary.length === 0) {
+        tableBody.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        tableWrapper.classList.add('hidden');
+        amountChartCard.classList.add('hidden');
+        quantityChartCard.classList.add('hidden');
+        totalQuantityCell.textContent = '0';
+        totalAmountCell.textContent = '0';
+        overallAverageCell.textContent = '0';
+        destroySupplierCharts();
+        return;
+    }
+
+    emptyState.classList.add('hidden');
+    tableWrapper.classList.remove('hidden');
+    amountChartCard.classList.remove('hidden');
+    quantityChartCard.classList.remove('hidden');
+
+    tableBody.innerHTML = supplierSummary.map((supplier, index) => {
+        const rowClass = index % 2 === 0 ? 'bg-white' : 'bg-slate-50';
+        const quantityDecimals = Number.isInteger(supplier.totalQuantity) ? 0 : 2;
+        return `
+            <tr class="${rowClass}">
+                <td class="px-3 py-2 text-gray-700 font-semibold">${index + 1}</td>
+                <td class="px-3 py-2 text-gray-700">${supplier.vendor || 'N/A'}</td>
+                <td class="px-3 py-2 text-center text-gray-700">${formatNumber(supplier.poCount)}</td>
+                <td class="px-3 py-2 text-center text-gray-700">${formatNumber(supplier.totalQuantity, quantityDecimals)}</td>
+                <td class="px-3 py-2 text-right text-gray-700">${formatNumber(supplier.averageUnitPrice, 2)}</td>
+                <td class="px-3 py-2 text-right text-gray-700 font-semibold">${formatNumber(supplier.totalAmount, 2)}</td>
+            </tr>
+        `;
+    }).join('');
+
+    const totals = supplierSummary.reduce((acc, supplier) => {
+        acc.quantity += supplier.totalQuantity;
+        acc.amount += supplier.totalAmount;
+        return acc;
+    }, { quantity: 0, amount: 0 });
+
+    const overallAverage = totals.quantity > 0 ? totals.amount / totals.quantity : 0;
+
+    const quantityDecimals = Number.isInteger(totals.quantity) ? 0 : 2;
+    totalQuantityCell.textContent = formatNumber(totals.quantity, quantityDecimals);
+    totalAmountCell.textContent = formatNumber(totals.amount, 2);
+    overallAverageCell.textContent = formatNumber(overallAverage, 2);
+
+    renderSupplierCharts(supplierSummary);
+}
+
+
+function buildSupplierSummary(data) {
+    const summaryMap = new Map();
+
+    data.forEach(row => {
+        const normalizedRow = normalizeRowKeys(row);
+        const vendorName = String(normalizedRow['vendor name'] || normalizedRow['vendor'] || '').trim();
+        if (!vendorName) return;
+
+        const quantity = parseNumericValue(
+            normalizedRow['quantity'] ??
+            normalizedRow['qty'] ??
+            normalizedRow['order quantity'] ??
+            normalizedRow['order qty']
+        );
+
+        const unitPrice = parseNumericValue(
+            normalizedRow['unit price'] ??
+            normalizedRow['unitprice'] ??
+            normalizedRow['price'] ??
+            normalizedRow['unit cost'] ??
+            normalizedRow['unitcost']
+        );
+
+        const amountKeys = ['amount', 'total amount', 'line amount', 'line total', 'total', 'order amount', 'po amount', 'extended amount', 'extended price'];
+        let amount = 0;
+        for (const key of amountKeys) {
+            if (Object.prototype.hasOwnProperty.call(normalizedRow, key)) {
+                amount = parseNumericValue(normalizedRow[key]);
+                if (amount !== 0) break;
+            }
+        }
+
+        if (amount === 0 && quantity !== 0 && unitPrice !== 0) {
+            amount = quantity * unitPrice;
+        }
+
+        if (!summaryMap.has(vendorName)) {
+            summaryMap.set(vendorName, { vendor: vendorName, totalQuantity: 0, totalAmount: 0, poCount: 0 });
+        }
+
+        const supplier = summaryMap.get(vendorName);
+        supplier.totalQuantity += quantity;
+        supplier.totalAmount += amount;
+        supplier.poCount += 1;
+    });
+
+    return Array.from(summaryMap.values()).map(entry => ({
+        ...entry,
+        totalQuantity: entry.totalQuantity,
+        totalAmount: entry.totalAmount,
+        averageUnitPrice: entry.totalQuantity > 0 ? entry.totalAmount / entry.totalQuantity : 0
+    })).sort((a, b) => b.totalAmount - a.totalAmount);
+}
+
+
+function renderSupplierCharts(summary) {
+    const amountCanvas = document.getElementById('supplier-amount-chart');
+    const quantityCanvas = document.getElementById('supplier-quantity-chart');
+
+    if (!amountCanvas || !quantityCanvas) return;
+
+    destroySupplierCharts();
+
+    const topByAmount = summary.slice(0, 30);
+    const topByQuantity = [...summary].sort((a, b) => b.totalQuantity - a.totalQuantity).slice(0, 30);
+
+    if (topByAmount.length > 0) {
+        const labels = topByAmount.map(item => item.vendor);
+        const data = topByAmount.map(item => Number(item.totalAmount.toFixed(2)));
+        supplierAmountChart = createSupplierBarChart(amountCanvas.getContext('2d'), labels, data, 'Top 30 Suppliers by Total Amount', 2);
+    }
+
+    if (topByQuantity.length > 0) {
+        const labels = topByQuantity.map(item => item.vendor);
+        const hasFractionalQty = topByQuantity.some(item => !Number.isInteger(item.totalQuantity));
+        const decimals = hasFractionalQty ? 2 : 0;
+        const data = topByQuantity.map(item => Number(item.totalQuantity.toFixed(decimals)));
+        supplierQuantityChart = createSupplierBarChart(quantityCanvas.getContext('2d'), labels, data, 'Top 30 Suppliers by Total Quantity', decimals);
+    }
+}
+
+
+function createSupplierBarChart(ctx, labels, data, title, decimals) {
+    const palette = ['#7c3aed', '#6366f1', '#4338ca', '#0ea5e9', '#14b8a6', '#10b981', '#22d3ee', '#f97316', '#f59e0b', '#ec4899', '#ef4444'];
+    const colors = labels.map((_, index) => palette[index % palette.length]);
+
+    return new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels,
+            datasets: [{
+                data,
+                backgroundColor: colors,
+                borderRadius: 6,
+                maxBarThickness: 28
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            layout: { padding: { right: 16 } },
+            plugins: {
+                legend: { display: false },
+                title: {
+                    display: true,
+                    text: title
+                },
+                datalabels: {
+                    anchor: 'end',
+                    align: 'right',
+                    color: '#1f2937',
+                    formatter: (value) => formatNumber(value, decimals),
+                    offset: 4,
+                    clip: false
+                }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    grid: {
+                        color: '#e5e7eb'
+                    },
+                    ticks: {
+                        callback: (value) => formatNumber(value, 0)
+                    }
+                },
+                y: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        autoSkip: false,
+                        font: {
+                            size: labels.length > 20 ? 10 : 11
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+
+function destroySupplierCharts() {
+    if (supplierAmountChart) {
+        supplierAmountChart.destroy();
+        supplierAmountChart = null;
+    }
+    if (supplierQuantityChart) {
+        supplierQuantityChart.destroy();
+        supplierQuantityChart = null;
+    }
 }
 
 // --- Source Filter Functions ---

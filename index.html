@@ -328,7 +328,55 @@
                 </div>
 
                 <div id="supplier-info" class="tab-content" style="display: none;">
-                    <p>Supplier information will be displayed here.</p>
+                    <div class="space-y-6">
+                        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2">
+                            <div>
+                                <h2 class="text-xl font-bold text-gray-700">Supplier Information Report</h2>
+                                <p class="text-sm text-gray-500">Monitor purchase activity and key suppliers at a glance.</p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white border border-gray-200 rounded-lg shadow-sm p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-lg font-semibold text-gray-700">Supplier Spend Summary</h3>
+                            </div>
+                            <p id="supplier-empty-state" class="text-sm text-gray-500">Upload a procurement file to see supplier performance.</p>
+                            <div class="table-container hidden" id="supplier-table-wrapper">
+                                <table class="w-full text-sm" id="supplier-table">
+                                    <thead>
+                                        <tr>
+                                            <th class="bg-green-100 text-left font-semibold text-gray-700 px-3 py-2 rounded-tl-lg">#</th>
+                                            <th class="bg-green-100 text-left font-semibold text-gray-700 px-3 py-2">Supplier</th>
+                                            <th class="bg-blue-100 text-center font-semibold text-gray-700 px-3 py-2">PO Count</th>
+                                            <th class="bg-violet-100 text-center font-semibold text-gray-700 px-3 py-2">Total Quantity</th>
+                                            <th class="bg-amber-100 text-right font-semibold text-gray-700 px-3 py-2">Average Unit Price</th>
+                                            <th class="bg-rose-100 text-right font-semibold text-gray-700 px-3 py-2 rounded-tr-lg">Total Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="supplier-table-body"></tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="3" class="bg-slate-100 text-right font-semibold text-gray-700 uppercase tracking-wide px-3 py-2">Grand Totals</td>
+                                            <td class="bg-slate-100 text-center font-semibold text-gray-700 px-3 py-2" id="supplier-total-quantity">0</td>
+                                            <td class="bg-slate-100 text-right font-semibold text-gray-700 px-3 py-2" id="supplier-overall-average">0</td>
+                                            <td class="bg-slate-100 text-right font-semibold text-gray-700 px-3 py-2" id="supplier-total-amount">0</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                            <div class="graph-container hidden" id="supplier-amount-chart-card">
+                                <h3 class="text-base font-semibold text-gray-700 mb-3">Top 30 Suppliers by Total Amount</h3>
+                                <canvas id="supplier-amount-chart"></canvas>
+                            </div>
+                            <div class="graph-container hidden" id="supplier-quantity-chart-card">
+                                <h3 class="text-base font-semibold text-gray-700 mb-3">Top 30 Suppliers by Total Quantity</h3>
+                                <canvas id="supplier-quantity-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
